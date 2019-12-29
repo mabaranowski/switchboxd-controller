@@ -9,29 +9,32 @@ import { AppService } from './app.service';
 export class AppComponent implements OnInit {
 
   private relay: Number = 0;
+  private mode: Number = 0;
 
   constructor(private service: AppService) { }
 
   @HostListener('document:keydown.space')
   changeRelay() {
     this.relay === 0 ? this.relay = 1 : this.relay = 0;
-    console.log(this.relay);
+    console.log('Relay: ' + this.relay);
+  }
+
+  @HostListener('document:keydown.1')
+  changeMode() {
+    this.mode === 0 ? this.mode = 1 : this.mode = 0;
+    console.log('Mode: ' + this.mode);
   }
 
   ngOnInit() {
-    this.service.setRelayState(this.relay, 0).subscribe(resp => {
+    this.service.getDeviceStatus().subscribe(resp => {
       console.log(resp);
-    })
+    });
   }
 
   toggleSwitch() {
     this.service.setRelayState(this.relay, 2).subscribe(resp => {
       console.log(resp);
-    })
-
-    // this.service.getDeviceStatus().subscribe(resp => {
-    //   console.log(resp);
-    // });
+    });
   }
 
 }

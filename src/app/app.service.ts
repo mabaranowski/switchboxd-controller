@@ -14,7 +14,7 @@ export class AppService {
     }
 
     getDeviceStatus() {
-        return this.http.get(`${this.ip}api/device/state`);
+        return this.http.get(`${this.ip}api/relay/state`);
     }
 
 }
