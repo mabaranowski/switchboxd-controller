@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { AppService } from './app.service';
+import { ElectronService } from 'ngx-electron';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,7 @@ export class AppComponent implements OnInit {
   private relay: Number = 0;
   private mode: Number = 0;
 
-  constructor(private service: AppService) { }
+  constructor(private service: AppService, private electronService: ElectronService) { }
 
   @HostListener('document:keydown.space')
   changeRelay() {
@@ -26,9 +27,14 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.service.getDeviceStatus().subscribe(resp => {
-      console.log(resp);
-    });
+    // this.service.getDeviceStatus().subscribe(resp => {
+    //   console.log(resp);
+    // });
+
+    console.log(this.electronService);
+    console.log(this.electronService.process);
+
+
   }
 
   toggleSwitch() {
