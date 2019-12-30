@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { AppService } from './app.service';
 import { ElectronService } from 'ngx-electron';
+// import { ipcRenderer } from 'electron'
 
 @Component({
   selector: 'app-root',
@@ -27,13 +28,11 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    // this.service.getDeviceStatus().subscribe(resp => {
-    //   console.log(resp);
-    // });
-
-    console.log(this.electronService);
-    console.log(this.electronService.process);
-
+    //TODO move to some trigger and check if switchboxd responds
+    this.electronService.ipcRenderer.send('get-data', 'ping');
+    this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
+      console.log(arg);
+    });
 
   }
 
