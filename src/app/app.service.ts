@@ -5,7 +5,8 @@ import { Injectable } from '@angular/core';
     providedIn: 'root'
 })
 export class AppService {
-    private ip = 'http://192.168.8.50/';
+    // private ip = 'http://192.168.8.50/';
+    private ip = 'http://192.168.8.69/';
 
     constructor(private http: HttpClient) { }
 
@@ -14,7 +15,7 @@ export class AppService {
     }
 
     getDeviceStatus() {
-        return this.http.get(`${this.ip}api/relay/state`);
+        return this.http.get(`${this.ip}api/device/state`);
     }
 
 }

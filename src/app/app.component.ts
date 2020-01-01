@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { AppService } from './app.service';
 import { ElectronService } from 'ngx-electron';
+import { timeout, catchError } from 'rxjs/operators';
 // import { ipcRenderer } from 'electron'
 
 @Component({
@@ -12,6 +13,7 @@ export class AppComponent implements OnInit {
 
   private relay: Number = 0;
   private mode: Number = 0;
+  private deviceFound: Boolean = true;
 
   constructor(private service: AppService, private electronService: ElectronService) { }
 
@@ -27,13 +29,61 @@ export class AppComponent implements OnInit {
     console.log('Mode: ' + this.mode);
   }
 
-  ngOnInit() {
-    //TODO move to some trigger and check if switchboxd responds
-    this.electronService.ipcRenderer.send('get-data', 'ping');
-    this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
-      console.log(arg);
-    });
+  @HostListener('document:keydown.R')
+  checkTmp() {
+    console.log('here');
+    this.checkDeviceAvailability();
+  }
 
+  ngOnInit() {
+    console.log('onInit');
+    // this.checkDeviceAvailability();
+
+    this.service.getDeviceStatus()
+    .pipe(
+      timeout(2000)
+    )
+    .subscribe(
+      resp => {
+        // console.log(resp);
+        // this.deviceFound = true;
+      },
+      err => {
+        // console.error(err);
+        // this.deviceFound = false;
+        console.log("err here");
+        this.electronService.ipcRenderer.send('get-data', 'ping');
+        this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
+          console.log(arg);
+        });
+      });
+
+    // if(!this.deviceFound) {
+      
+    // }
+
+    //TODO move to some trigger and check if switchboxd responds
+    // this.electronService.ipcRenderer.send('get-data', 'ping');
+    // this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
+    //   console.log(arg);
+    // });
+
+  }
+
+  checkDeviceAvailability() {
+    this.service.getDeviceStatus()
+      .pipe(
+        timeout(2000)
+      )
+      .subscribe(
+        resp => {
+          console.log(resp);
+          this.deviceFound = true;
+        },
+        err => {
+          console.error(err);
+          this.deviceFound = false;
+        });
   }
 
   toggleSwitch() {
