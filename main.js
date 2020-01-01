@@ -48,13 +48,29 @@ function execute(command, callback) {
 //TODO ip to external environment variables
 ipcMain.on('get-data', (event, arg) => {
     if(process.platform === 'win32') {
-        //? Check on windows machine
-        exec(`FOR /L %ip IN (46,1,50) DO ping -n 1 -w 10 192.168.8.%ip`); 
+        for(let i = 1; i < 250; i += 5) {
+            exec(`FOR /L %i IN (${i},1,${i+4}) DO ping -n 1 -w 10 192.168.8.%i`);
+        }
 
-        // for(let i = 1; i < 250; i += 5) {
-        //     exec(`FOR /L %ip IN (1,1,254) DO ping -n 1 -w 10 192.168.8.%ip`);
-        // }
+        execute('FOR /L %i IN (250,1,254) DO ping -n 1 -w 10 192.168.8.%i', (output) => {
+            execute('arp -a', (result) => {
+                const splitResult = result.split('\r');
+                let record = '';
+                for(let iterator of splitResult) {
+                    if(iterator.includes('cc-50-e3-2c-76-a8')) {
+                        record = iterator;
+                        break;
+                    }
+                }
 
+                const space = record.indexOf(' ');
+                const trimedRecord = record.replace(/\s/g, '');
+                const endIndex = trimedRecord.indexOf('c');
+                const ip = trimedRecord.slice(0, endIndex);
+
+                event.reply('reply-data', ip);
+            });
+        });
         
     }
     
