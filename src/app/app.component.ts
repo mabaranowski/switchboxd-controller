@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
 import { AppService } from './app.service';
 import { ElectronService } from 'ngx-electron';
 import { timeout } from 'rxjs/operators';
@@ -11,10 +11,13 @@ import { timeout } from 'rxjs/operators';
 export class AppComponent implements OnInit {
 
   private relay: Number = 0;
-  private mode: Number = 0;
+  private mode: Number = 2;
   private inputIp: String;
 
-  constructor(private service: AppService, private electronService: ElectronService) { }
+  constructor(
+    private service: AppService, 
+    private electronService: ElectronService,
+    private ref: ChangeDetectorRef) { }
 
   @HostListener('document:keydown.space')
   changeRelay() {
@@ -37,7 +40,10 @@ export class AppComponent implements OnInit {
       timeout(2000)
     )
     .subscribe(
-      resp => {},
+      resp => {
+        this.mode = 0;
+        this.ref.detectChanges();
+      },
       err => {
         this.electronService.ipcRenderer.send('get-stored-ip', 'ping');
         this.electronService.ipcRenderer.on('reply-stored-ip', (event, arg) => {
@@ -53,11 +59,16 @@ export class AppComponent implements OnInit {
       timeout(2000)
     )
     .subscribe(
-      resp => {},
+      resp => {
+        this.mode = 0;
+        this.ref.detectChanges();
+      },
       err => {
         this.electronService.ipcRenderer.send('get-data', 'ping');
         this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
           this.service.setIp(arg);
+          this.mode = 0;
+          this.ref.detectChanges();
         });
       });
   }
@@ -71,5 +82,5 @@ export class AppComponent implements OnInit {
     this.electronService.ipcRenderer.send('send-input-ip', this.inputIp);
     this.mode = 0;
   }
-  
+
 }
