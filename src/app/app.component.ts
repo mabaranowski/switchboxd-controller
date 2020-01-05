@@ -19,7 +19,7 @@ export class AppComponent implements OnInit {
     private electronService: ElectronService,
     private ref: ChangeDetectorRef) { }
 
-  @HostListener('document:keydown.space')
+  @HostListener('document:keydown.X')
   changeRelay() {
     this.relay === 0 ? this.relay = 1 : this.relay = 0;
   }
@@ -29,7 +29,7 @@ export class AppComponent implements OnInit {
     this.mode === 0 ? this.mode = 1 : this.mode = 0;
   }
 
-  @HostListener('document:keydown.X')
+  @HostListener('document:keydown.M')
   askForIp() {
     this.mode === 2 ? this.mode = 0 : this.mode = 2;
   }
