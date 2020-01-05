@@ -1,4 +1,4 @@
-<div class="fullscreen">
+<div class="fullscreen flexIt">
   <div class="fullscreen" *ngIf="mode === 0">
     <button 
     type="button" 
@@ -13,5 +13,9 @@
     (mousedown)="toggleSwitch()" 
     (mouseup)="toggleSwitch()">
     </button>
+  </div>
+  <div class="fullscreen centerInput flexIt" *ngIf="mode === 2">
+      <input class="inputField" [(ngModel)]="inputIp"/>
+      <button class="inputButton" (click)="submitIp()">Submit</button>
   </div>
 </div>

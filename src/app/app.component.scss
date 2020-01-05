@@ -3,10 +3,36 @@
     height: 100%;
 }
 
+.flexIt {
+    display: flex;
+}
+
 .relayZero {
     background-color: #24782c;
 }
 
 .relayOne {
     background-color: #7a2323;
+}
+
+.centerInput {
+    background-color: #424242;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.inputField {
+    height: 30px;
+    width: 200px;
+    text-align: center;
+    font-size: large;
+    border-radius: 5px;
+}
+
+.inputButton {
+    height: 20px;
+    width: 150px;
+    margin-top: 5px;
+    font-size: small;
 }
