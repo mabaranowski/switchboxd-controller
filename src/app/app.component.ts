@@ -19,19 +19,16 @@ export class AppComponent implements OnInit {
   @HostListener('document:keydown.space')
   changeRelay() {
     this.relay === 0 ? this.relay = 1 : this.relay = 0;
-    console.log('Relay: ' + this.relay);
   }
 
   @HostListener('document:keydown.Z')
   changeMode() {
     this.mode === 0 ? this.mode = 1 : this.mode = 0;
-    console.log('Mode: ' + this.mode);
   }
 
   @HostListener('document:keydown.X')
   askForIp() {
     this.mode === 2 ? this.mode = 0 : this.mode = 2;
-    console.log('Mode: ' + this.mode);
   }
 
   ngOnInit() {
@@ -44,44 +41,35 @@ export class AppComponent implements OnInit {
       err => {
         this.electronService.ipcRenderer.send('get-stored-ip', 'ping');
         this.electronService.ipcRenderer.on('reply-stored-ip', (event, arg) => {
-          console.log("reply-stored-ip");
-          console.log(arg);
-
           this.service.setIp(arg);
-          this.service.getDeviceStatus()
-          .pipe(
-            timeout(2000)
-          )
-          .subscribe(
-            resp => {},
-            err => {
-              this.electronService.ipcRenderer.send('get-data', 'ping');
-              this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
-                console.log("reply-data");
-                console.log(arg);
+          this.findIp();
+        });
+      });
+  }
 
-                this.service.setIp(arg);
-              });
-            });
-          });
-      
+  findIp() {
+    this.service.getDeviceStatus()
+    .pipe(
+      timeout(2000)
+    )
+    .subscribe(
+      resp => {},
+      err => {
+        this.electronService.ipcRenderer.send('get-data', 'ping');
+        this.electronService.ipcRenderer.on('reply-data', (event, arg) => {
+          this.service.setIp(arg);
+        });
       });
   }
 
   toggleSwitch() {
-    this.service.setRelayState(this.relay, 2).subscribe(resp => {
-      console.log(resp);
-    });
+    this.service.setRelayState(this.relay, 2).subscribe(resp => {});
   }
 
   submitIp() {
-    console.log('from submitIp');
-    console.log(this.inputIp);
-
     this.service.setIp(this.inputIp);
     this.electronService.ipcRenderer.send('send-input-ip', this.inputIp);
-
     this.mode = 0;
   }
-
+  
 }

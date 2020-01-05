@@ -7,10 +7,6 @@ let window;
 const store = new Store();
 
 function createWindow() {
-    // window = new BrowserWindow({
-    //     fullscreen: true
-    // })
-
     window = new BrowserWindow({ 
         fullscreen: true,
         webPreferences: {
@@ -19,91 +15,36 @@ function createWindow() {
         }
     });
 
-    window.loadURL(`file://${__dirname}/dist/index.html`)
-
-    // window.webContents.openDevTools()
-
+    window.loadURL(`file://${__dirname}/dist/index.html`);
     window.on('closed', function () {
-        window = null
-    })
+        window = null;
+    });
+
+    // Uncomment for devTools
+    // window.webContents.openDevTools()
 }
 
 app.on('ready', function () {
-    createWindow()
-})
+    createWindow();
+});
 
 app.on('window-all-closed', function () {
-    app.quit()
-})
+    app.quit();
+});
 
 app.on('activate', function () {
-    createWindow()
-})
-
-function execute(command, callback) {
-    exec(command, (error, stdout, stderr) => { 
-        callback(stdout); 
-    });
-};
+    createWindow();
+});
 
 ipcMain.on('get-data', (event, arg) => {
     const localIp = store.get('localIp');
-    console.log('localIp');
-    console.log(localIp);
 
     if(process.platform === 'win32') {
-        for(let i = 1; i < 250; i += 5) {
-            exec(`FOR /L %i IN (${i},1,${i+4}) DO ping -n 1 -w 10 ${localIp}%i`);
-        }
-
-        execute(`FOR /L %i IN (250,1,254) DO ping -n 1 -w 10 ${localIp}%i`, (output) => {
-            execute('arp -a', (result) => {
-                const splitResult = result.split('\r');
-                let record = '';
-                for(let iterator of splitResult) {
-                    if(iterator.includes('cc-50-e3-2c-76-a8')) {
-                        record = iterator;
-                        break;
-                    }
-                }
-
-                const trimedRecord = record.replace(/\s/g, '');
-                const endIndex = trimedRecord.indexOf('c');
-                const ip = trimedRecord.slice(0, endIndex);
-
-                store.set('ip', ip);
-                storeLocalIp(ip);
-                event.reply('reply-data', ip);
-            });
-        });
-        
+        pingWindows(localIp, event);
     }
     
     if(process.platform === 'darwin' || process.platform === 'linux') {  
-        for(let i = 1; i < 250; i += 5) {
-            exec(`for ip in $(seq ${i} ${i+4}); do ping -c 1 -W 10 ${localIp}$ip; done`);
-        }
-
-        execute(`for ip in $(seq 250 254); do ping -c 1 -W 10 ${localIp}$ip; done`, (output) => {
-            execute('arp -a', (result) => {
-                const splitResult = result.split('\n');
-                let record = '';
-                for(let iterator of splitResult) {
-                    if(iterator.includes('cc:50:e3:2c:76:a8')) {
-                        record = iterator;
-                        break;
-                    }
-                }
-
-                const openBracket = record.indexOf('(');
-                const closeBracket = record.indexOf(')');
-                const ip = record.slice(openBracket + 1, closeBracket);
-
-                store.set('ip', ip);
-                storeLocalIp(ip);
-                event.reply('reply-data', ip);
-            });
-        });
+        pingDarwinLinux(localIp, event);
     }
 });
 
@@ -113,15 +54,70 @@ ipcMain.on('get-stored-ip', (event, arg) => {
 });
 
 ipcMain.on('send-input-ip', (event, arg) => {
-    console.log('arg');
-    console.log(arg);
-
     store.set('ip', arg);
     storeLocalIp(arg);
 });
+
+function pingDarwinLinux(localIp, event) {
+    for(let i = 1; i < 250; i += 5) {
+        exec(`for ip in $(seq ${i} ${i+4}); do ping -c 1 -W 10 ${localIp}$ip; done`);
+    }
+
+    execute(`for ip in $(seq 250 254); do ping -c 1 -W 10 ${localIp}$ip; done`, (output) => {
+        execute('arp -a', (result) => {
+            const record = findRecord(result, 'cc:50:e3:2c:76:a8', '\n');
+            const openBracket = record.indexOf('(');
+            const closeBracket = record.indexOf(')');
+            const ip = record.slice(openBracket + 1, closeBracket);
+
+            storeIp(event, ip);
+        });
+    });
+}
+
+function pingWindows(localIp, event) {
+    for(let i = 1; i < 250; i += 5) {
+        exec(`FOR /L %i IN (${i},1,${i+4}) DO ping -n 1 -w 10 ${localIp}%i`);
+    }
+
+    execute(`FOR /L %i IN (250,1,254) DO ping -n 1 -w 10 ${localIp}%i`, (output) => {
+        execute('arp -a', (result) => {
+            const record = findRecord(result, 'cc-50-e3-2c-76-a8', '\r');
+            const trimedRecord = record.replace(/\s/g, '');
+            const endIndex = trimedRecord.indexOf('c');
+            const ip = trimedRecord.slice(0, endIndex);
+
+            storeIp(event, ip);
+        });
+    });
+}
+
+function execute(command, callback) {
+    exec(command, (error, stdout, stderr) => { 
+        callback(stdout); 
+    });
+};
+
+function storeIp(event, ip) {
+    store.set('ip', ip);
+    storeLocalIp(ip);
+    event.reply('reply-data', ip);
+}
 
 function storeLocalIp(ip) {
     const lastDot = ip.lastIndexOf('.');
     const localIp = ip.slice(0, lastDot + 1);
     store.set('localIp', localIp);
+};
+
+function findRecord(result, mac, separator) {
+    const splitResult = result.split(separator);
+    let record = '';
+    for(let iterator of splitResult) {
+        if(iterator.includes(mac)) {
+            record = iterator;
+            break;
+        }
+    }
+    return record;
 }
